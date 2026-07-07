@@ -44,10 +44,10 @@ const nameInput   = page => page.getByPlaceholder('Aragorn...');
 const classInput  = page => page.getByPlaceholder('Ranger...');
 // XP preview inside the open modal (all 6 panels are in DOM; scope to the backdrop).
 const xpPreview   = page => page.locator('.modal-backdrop .xp-preview-value').first();
-// Note input in modal (only text input inside modal).
-const noteInput   = page => page.locator('.modal-backdrop input[type="text"]');
-// Score number input in the Save modal.
-const scoreInput  = page => page.locator('.modal-backdrop input[type="number"][min="1"]');
+// Note input in modal (scoped to its x-model, since other text inputs exist for "other XP").
+const noteInput   = page => page.locator('.modal-backdrop input[x-model="modal.note"]');
+// Score number input in the Save modal (scoped to its x-model, since "other XP" also uses a number input).
+const scoreInput  = page => page.locator('.modal-backdrop input[x-model\\.number="modal.saveScore"]');
 
 const BASE_CHAR = {
   id: 1000,
