@@ -128,6 +128,10 @@
             <span class="btn-icon">&#10024;</span>
             <span class="btn-label" x-text="T('cat_spell')"></span>
           </button>
+          <button class="action-btn" style="grid-column:1 / -1;border-right:none;" @click="openModal('other')">
+            <span class="btn-icon">&#128221;</span>
+            <span class="btn-label" x-text="T('cat_other')"></span>
+          </button>
         </div>
         <div class="log-journal-scroll" @scroll="actionsOpen = $el.scrollTop === 0">
           <div x-show="groupedLog.length === 0" class="journal-empty" x-text="T('no_entries')"></div>
@@ -198,10 +202,10 @@
             </div>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>
@@ -224,10 +228,10 @@
             </div>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>
@@ -254,10 +258,10 @@
             </div>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>
@@ -277,10 +281,10 @@
             </div>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>
@@ -302,10 +306,10 @@
             </p>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>
@@ -332,10 +336,32 @@
             </div>
           </div>
         </div>
-        <div style="width:88px;flex-shrink:0;padding-top:20px;">
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
           <div class="xp-preview" style="margin:0;">
             <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
-            <div class="xp-preview-value" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Other -->
+    <div x-show="modal.type === 'other'">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div style="flex:1;min-width:0;">
+          <div class="form-group">
+            <label class="form-label" x-text="T('lbl_other_xp')"></label>
+            <input class="form-input" x-model.number="modal.otherXp" type="number" min="1" max="99999" placeholder="...">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" x-text="T('lbl_other_desc')"></label>
+            <input class="form-input" x-model="modal.otherDesc" type="text" placeholder="...">
+          </div>
+        </div>
+        <div style="width:100px;flex-shrink:0;padding-top:20px;">
+          <div class="xp-preview" style="margin:0;">
+            <div class="xp-preview-label" x-text="T('lbl_xp_earned')"></div>
+            <div class="xp-preview-value" :data-len="xpPreviewDisplay.length" :class="{ zero: xpPreviewIsZero }" x-text="xpPreviewDisplay"></div>
           </div>
         </div>
       </div>

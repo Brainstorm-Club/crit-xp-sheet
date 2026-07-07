@@ -156,7 +156,9 @@ main { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-hei
 .select-wrap::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text2); pointer-events: none; font-size: 0.75rem; }
 .xp-preview { background: var(--bg2); border: 2px solid var(--border); padding: 10px; text-align: center; margin: 10px 0; }
 .xp-preview-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); }
-.xp-preview-value { font-size: 2.4rem; font-weight: 900; color: var(--text); margin-top: 2px; line-height: 1; }
+.xp-preview-value { font-size: 2.4rem; font-weight: 900; color: var(--text); margin-top: 2px; line-height: 1; white-space: nowrap; }
+.xp-preview-value[data-len="4"] { font-size: 1.9rem; }
+.xp-preview-value[data-len="5"] { font-size: 1.5rem; }
 .xp-preview-value.zero { color: var(--text3); }
 .opt-btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
 .opt-btn-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }

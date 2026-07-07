@@ -120,6 +120,7 @@ const CAT_ICON_MAP = {
   'crit-recv':'\u{1FA78}',
   kill:       '\u{1F480}',
   spell:      '\u2728',
+  other:      '\u{1F4DD}',
   levelup:    '\u2B50',
 };
 window.app = function app() {
@@ -139,6 +140,7 @@ window.app = function app() {
       gradeRecv:'A',
       killOpp:'1',
       spellLvl:1, casterLvl:1,
+      otherXp:null, otherDesc:'',
       note:'',
       editId: null,
     },
@@ -308,6 +310,7 @@ window.app = function app() {
       this.modal.note = '';
       this.modal.editId = null;
       if (type === 'spell') this.modal.casterLvl = this.char.level;
+      if (type === 'other') { this.modal.otherXp = null; this.modal.otherDesc = ''; }
       this.modal.open = true;
       document.body.style.overflow = 'hidden';
     },
@@ -329,6 +332,7 @@ window.app = function app() {
       if (d.type === 'crit-recv') { this.modal.gradeRecv = d.grade; }
       if (d.type === 'kill')      { this.modal.killOpp = d.opp; }
       if (d.type === 'spell')     { this.modal.spellLvl = d.spell; this.modal.casterLvl = d.caster; }
+      if (d.type === 'other')     { this.modal.otherXp = entry.xp; this.modal.otherDesc = d.desc; }
       this.modal.open = true;
       document.body.style.overflow = 'hidden';
     },
@@ -341,6 +345,7 @@ window.app = function app() {
       if (m.type === 'crit-recv') return CRIT_RECV_TABLE[m.gradeRecv];
       if (m.type === 'kill')     return getKillXP(String(m.killOpp), this.char.level);
       if (m.type === 'spell')    return getSpellXP(m.spellLvl, m.casterLvl);
+      if (m.type === 'other')    { const v = parseInt(m.otherXp); return isNaN(v) ? null : v; }
       return null;
     },
 
@@ -371,6 +376,7 @@ window.app = function app() {
         'crit-recv':this.T('modal_crit_recv'),
         kill:       this.T('modal_kill'),
         spell:      this.T('modal_spell'),
+        other:      this.T('modal_other'),
       };
       return map[this.modal.type] || '';
     },
@@ -383,6 +389,7 @@ window.app = function app() {
       if (type === 'crit-recv') return { type, grade:m.gradeRecv };
       if (type === 'kill')      return { type, opp:m.killOpp, you:this.char.level };
       if (type === 'spell')     return { type, spell:m.spellLvl, caster:m.casterLvl };
+      if (type === 'other')     return { type, desc:m.otherDesc || '' };
       return { type };
     },
 
@@ -394,6 +401,7 @@ window.app = function app() {
       if (d.type === 'crit-recv') return `${this.T('desc_critr_grade')} ${d.grade}`;
       if (d.type === 'kill')      return `${this.T('desc_kill')} Lv${d.opp} (${this.T('desc_kill_you')} ${d.you})`;
       if (d.type === 'spell')     return `${this.T('desc_spell')} Lv${d.spell} / ${this.T('desc_spell_caster')} Lv${d.caster}`;
+      if (d.type === 'other')     return d.desc ? d.desc : this.T('desc_other');
       if (d.type === 'levelup')   return d.fallback || '';
       return '';
     },
@@ -467,6 +475,7 @@ window.app = function app() {
         'crit-recv':this.T('cat_crit_recv'),
         kill:       this.T('cat_kill'),
         spell:      this.T('cat_spell'),
+        other:      this.T('cat_other'),
         levelup:    this.T('entry_levelup'),
       })[cat] || cat;
     },
