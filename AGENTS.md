@@ -136,7 +136,16 @@ Difficulty and risk values are stored in English internally and translated via `
 
 All colours are CSS custom properties, set in `:root` with a `@media (prefers-color-scheme: dark)` override. Never hardcode colours.
 
-Key tokens: `--bg` `--bg2` `--bg3` `--border` `--text` `--text2` `--text3` `--accent` `--accent-bg` `--danger` `--warn` `--warn-bg`
+Key tokens: `--bg` `--bg2` `--bg3` `--border` `--text` `--text2` `--text3` `--accent` `--accent-bg` `--accent-solid` `--danger` `--warn` `--warn-bg`
+
+### Brainstorm Club design system
+
+The palette and typography come from the [Brainstorm Club design system](https://github.com/Brainstorm-Club/design-system). Its token layer is **vendored** at `design-system/tokens.css` (defines `--bsc-*`) and loaded before `style.css`. It's vendored rather than linked via CDN/submodule so the app stays self-contained and offline-capable (it must work opened straight from a downloaded ZIP over `file://`). The app's semantic vars (`--bg`, `--text`, `--accent`, …) are **re-bound to `--bsc-*` tokens** in `style.css`, so re-skinning happens there with no markup churn. To refresh the tokens, copy the latest `tokens.css` from the DS repo and bump the commit hash in the vendored file's header.
+
+- **Palette:** Carbone `#181617` · Rosso mattone `#C2332B` (the one accent, on the primary action) · Bianco caldo `#F4F1EC` · Carta `#EFEAE1`.
+- **Type:** display/brand = `--bsc-font-display` (Courier Prime → Courier New typewriter mono, used on headings & XP numbers); body = `--bsc-font-body` (Atkinson Hyperlegible → system-ui). Web fonts are **not** fetched (no external requests) — the system fallbacks carry the look.
+- **Signature:** sketch border-radius (`--bsc-radius-sketch`) + print shadow (`--bsc-shadow-pop`) on the XP-preview box; brand focus ring via `--bsc-focus`.
+- Theme polarity is unchanged: base light (carta), `auto` follows the OS, toggle forces light/dark via `[data-theme]`. New DS files must be added to the `cp` commands in `deploy.yml` (done for `design-system/`).
 
 Category colours: `--c-maneuver` `--c-save` `--c-critd` `--c-critr` `--c-kill` `--c-spell` `--c-levelup`
 
