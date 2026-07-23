@@ -2,7 +2,7 @@
 
 A lightweight, mobile-friendly experience point tracker for tabletop RPGs — designed for systems where XP is earned through maneuvers, saving throws, criticals, kills, and spells (e.g. HARP).
 
-**→ [Open the app](https://tntimo.github.io/crit-xp-sheet/)**
+**→ [Open the app](https://brainstorm-club.github.io/crit-xp-sheet/)**
 
 No installation needed. Open the link above on any device, or clone/download the repository and open `index.html` locally (all files must be present together).
 
