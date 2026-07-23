@@ -89,6 +89,17 @@
               <button class="char-list-delete" @click="deleteCharacter(c.id)" title="Delete">&#10005;</button>
             </div>
           </template>
+          <div class="backup-title" x-text="T('backup_title')"></div>
+          <p class="backup-note" x-text="T('backup_note')"></p>
+          <div class="backup-actions">
+            <button class="backup-btn" @click="exportData()">
+              <span aria-hidden="true">&#11015;&#65039;</span> <span x-text="T('btn_export')"></span>
+            </button>
+            <button class="backup-btn" @click="triggerImport()">
+              <span aria-hidden="true">&#11014;&#65039;</span> <span x-text="T('btn_import')"></span>
+            </button>
+          </div>
+          <input type="file" x-ref="importFile" accept="application/json,.json" @change="importData($event)" hidden>
         </div></div>
       </div>
     </div>

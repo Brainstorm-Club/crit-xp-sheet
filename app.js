@@ -35,6 +35,68 @@ export async function dbDeleteCharAndEntries(charId) {
   await tx.done;
 }
 
+// Monotonic, strictly increasing id generator. Time-based like the rest of the
+// app (Date.now()) but guaranteed unique even when many ids are minted in the
+// same tick — needed when importing a backup with many characters/entries.
+let _lastId = 0;
+export function uid() {
+  const now = Date.now();
+  _lastId = now > _lastId ? now : _lastId + 1;
+  return _lastId;
+}
+
+// Valid log categories, used to sanitise imported entries.
+const IMPORT_CATS = new Set(['maneuver','save','crit-done','crit-recv','kill','spell','other','levelup']);
+
+// Serialises all characters + their entries into a single backup object.
+export async function dbExportAll() {
+  const db = await getDB();
+  const [characters, entries] = await Promise.all([
+    db.getAll('characters'),
+    db.getAll('entries'),
+  ]);
+  const byChar = {};
+  for (const e of entries) (byChar[e.charId] ||= []).push(e);
+  return {
+    format: 'crit-xp-sheet',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    characters: characters.map(c => ({
+      ...c,
+      log: (byChar[c.id] || []).map(({ charId, ...e }) => e),
+    })),
+  };
+}
+
+// Validates and normalises a parsed backup object into a clean character list.
+// Throws if the payload is not a recognisable backup.
+export function normalizeImport(data) {
+  const list = Array.isArray(data?.characters) ? data.characters
+             : Array.isArray(data) ? data
+             : null;
+  if (!list) throw new Error('unrecognised backup format');
+  return list.map(c => {
+    if (!c || typeof c !== 'object') throw new Error('invalid character');
+    const log = Array.isArray(c.log) ? c.log : [];
+    return {
+      name:    String(c.name ?? ''),
+      cls:     String(c.cls ?? ''),
+      level:   parseInt(c.level)   || 1,
+      startXp: parseInt(c.startXp) || 0,
+      log: log
+        .filter(e => e && typeof e === 'object')
+        .map(e => ({
+          cat:      IMPORT_CATS.has(e.cat) ? e.cat : 'other',
+          xp:       parseInt(e.xp) || 0,
+          descData: (e.descData && typeof e.descData === 'object')
+                      ? e.descData : { type: 'other', desc: '' },
+          note:     String(e.note ?? ''),
+          ts:       typeof e.ts === 'string' ? e.ts : new Date().toISOString(),
+        })),
+    };
+  });
+}
+
 // ═══════════════════════════════════════════
 // XP TABLES
 // ═══════════════════════════════════════════
@@ -490,6 +552,77 @@ window.app = function app() {
       this.toastShow = true;
       clearTimeout(this._toastTimer);
       this._toastTimer = setTimeout(() => { this.toastShow = false; }, 2500);
+    },
+
+    // Loads a character (metadata + entries) into the working copy and marks it active.
+    _loadChar(c) {
+      this.char = { id: null, name:'', cls:'', level:1, startXp:0, ...c, log: [] };
+      this.activeCharId = c.id;
+      localStorage.setItem('cb_active_char', String(c.id));
+      dbGetEntriesForChar(c.id).then(entries => { this.char.log = entries; });
+      if (this.char.name) this.view = 'log';
+    },
+
+    // ── Backup / Restore ──────────────────────────────────────────────
+    // Exports every character and its log as a downloadable JSON file.
+    async exportData() {
+      this.saveState();
+      const payload = await dbExportAll();
+      if (payload.characters.length === 0) { this.showToast(this.T('export_empty')); return; }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `crit-xp-sheet-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.showToast(this.T('export_success'));
+    },
+
+    // Opens the OS file picker (wired to the hidden file input in the setup view).
+    triggerImport() {
+      if (this.$refs.importFile) this.$refs.importFile.click();
+    },
+
+    // Reads a backup file and merges its characters into IndexedDB.
+    // Imported rows always get fresh ids, so importing never overwrites existing data.
+    async importData(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        const incoming = normalizeImport(JSON.parse(await file.text()));
+        if (incoming.length === 0) { this.showToast(this.T('import_empty')); return; }
+
+        const db = await getDB();
+        const tx = db.transaction(['characters', 'entries'], 'readwrite');
+        let firstId = null;
+        for (const c of incoming) {
+          const charId = uid();
+          if (firstId === null) firstId = charId;
+          tx.objectStore('characters').put({
+            id: charId, name: c.name, cls: c.cls, level: c.level, startXp: c.startXp,
+          });
+          for (const e of c.log) {
+            tx.objectStore('entries').put({ ...e, id: uid(), charId });
+          }
+        }
+        await tx.done;
+
+        // Refresh the manager list; activate an imported character if none was active.
+        this.characters = await db.getAll('characters');
+        if (!this.activeCharId && firstId !== null) {
+          const first = this.characters.find(ch => ch.id === firstId);
+          if (first) { this._loadChar(first); }
+        }
+        this.view = 'setup';
+        this.showToast(this.T('import_success').replace('{n}', String(incoming.length)));
+      } catch (err) {
+        this.showToast(this.T('import_error'));
+      } finally {
+        event.target.value = '';  // allow re-selecting the same file
+      }
     },
   };
 }

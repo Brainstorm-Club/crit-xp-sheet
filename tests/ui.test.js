@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
 
 // Seed IndexedDB and localStorage before the page loads.
 async function setup(page, { char, lang } = {}) {
@@ -220,6 +221,75 @@ test('deleting a character removes it from the list', async ({ page }) => {
   await page.locator('.char-list-delete').click();
 
   await expect(page.locator('.char-list-item')).not.toBeVisible();
+});
+
+
+// ── Backup: export / import ─────────────────────────────────────────────────
+
+test('exporting produces a backup file containing the character and its log', async ({ page }) => {
+  const char = {
+    ...BASE_CHAR,
+    log: [{
+      id: 5000, cat: 'save', xp: 90,
+      descData: { type: 'save', score: 90 },
+      note: 'from export', ts: new Date().toISOString(),
+    }],
+  };
+  await setup(page, { char });
+
+  await page.locator('nav').getByRole('button', { name: 'Character' }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export' }).click(),
+  ]);
+
+  const data = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
+  expect(data.format).toBe('crit-xp-sheet');
+  expect(data.characters).toHaveLength(1);
+  expect(data.characters[0].name).toBe('Aragorn');
+  expect(data.characters[0].log).toHaveLength(1);
+  expect(data.characters[0].log[0].xp).toBe(90);
+});
+
+test('importing a backup adds the character with the correct total XP', async ({ page }) => {
+  await setup(page);  // no characters yet
+
+  await page.locator('nav').getByRole('button', { name: 'Character' }).click();
+  const payload = {
+    format: 'crit-xp-sheet', version: 1,
+    characters: [{
+      name: 'Boromir', cls: 'Warrior', level: 7, startXp: 100,
+      log: [{ cat: 'kill', xp: 60, descData: { type: 'kill', opp: '3', you: 7 }, note: '', ts: new Date().toISOString() }],
+    }],
+  };
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(payload)),
+  });
+
+  await expect(page.locator('.char-list-name', { hasText: 'Boromir' })).toBeVisible();
+  // startXp 100 + kill 60 = 160
+  await expect(page.locator('.char-xp')).toContainText('160');
+
+  // Persists across reload (written to IndexedDB, not just in memory).
+  await page.reload();
+  await expect(page.locator('#app')).toBeVisible();
+  await expect(page.locator('.char-name')).toContainText('Boromir');
+});
+
+test('importing an invalid file shows an error and adds nothing', async ({ page }) => {
+  await setup(page);
+
+  await page.locator('nav').getByRole('button', { name: 'Character' }).click();
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'broken.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('not valid json {{{'),
+  });
+
+  await expect(page.locator('.toast')).toContainText('Import failed');
+  await expect(page.locator('.char-list-item')).toHaveCount(0);
 });
 
 
